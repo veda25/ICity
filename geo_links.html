@@ -159,7 +159,13 @@
     d3.selectAll('#image').style("display","none");
 
 
-
+    var paths =  			{
+			fill: "#000000",
+			stroke: "#626161",
+			strokewidth: "0.25",
+			strokemiterlimit: "10",
+		 	d: "M0,-5L10,0L0,5"
+		};
 
 
     var initStackedBarChart = {
@@ -219,6 +225,34 @@
             .text(function (d) {
                 return "0";
             });
+
+            layer.append('path')
+
+          		.attr("class", ".arrow")
+              .attr("orient", "auto")
+              .attr('transform', 'rotate(270 0 0) translate(' + -45 +','+ 150+')')
+
+              .attr("d",   paths.d)
+                	.style("stroke", function(d) { return 'black' })
+                	.style("stroke-width", function(d) { return paths.strokewidth; })
+                	.style("stroke-miterlimit", function(d) { return paths.strokemiterlimit; })
+                	.style("fill", function(d) { return paths.fill; })
+
+;
+layer.append("text")
+ .attr("class", "label")
+ //y position of the label is halfway down the bar
+ //x position is 3 pixels to the right of the bar
+ .attr("x", function (d) {
+     return  145;
+ })
+ .attr("y", function (d) {
+     return  55;
+ })
+
+ .text(function (d) {
+     return "50";
+ });
 
 
                        layer.append("text")
@@ -382,8 +416,96 @@ initStackedBarChart.draw({
       `
       ;
 
+    d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
 
-          d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
+      var initStackedBarChart = {
+    draw: function(config) {
+      me = this,
+      domEle = config.element,
+      stackKey = config.key,
+      data = config.data,
+      margin = config.margin,
+      width = 70 ,
+      height = 50 ,
+      xScale = d3.scaleLinear().rangeRound([0, width]),
+      yScale = d3.scaleBand().rangeRound([height, 0]).padding(0.1),
+      color = d3.scaleOrdinal()
+            .range(["red", "green", "blue", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+      xAxis = d3.axisBottom(xScale),
+      yAxis =  d3.axisLeft(yScale),
+      svg = d3.select("#optionsWrapper").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      var stack = d3.stack()
+        .keys(stackKey)
+        /*.order(d3.stackOrder)*/
+        .offset(d3.stackOffsetNone);
+
+      var layers= stack(data);
+        yScale.domain(data.map(function(d) { return d.date; }));
+        xScale.domain([0, 100 ]).nice();
+
+      var layer = svg.selectAll(".layer")
+        .data(layers)
+        .enter().append("g")
+        .attr("class", "layer")
+        .style("fill", function(d, i) { return color(i); });
+
+        layer.selectAll("rect")
+          .data(function(d) { return d; })
+        .enter().append("rect")
+          .attr("y", function(d) { return yScale(d.data.date); })
+          .attr("x", function(d) { return xScale(d[0]); })
+          .attr("height", 30)
+          .attr("width", function(d) { return xScale(d[1]) - xScale(d[0]) });
+
+             layer.append("text")
+              .attr("class", "label")
+              //y position of the label is halfway down the bar
+              //x position is 3 pixels to the right of the bar
+              .attr("x", function (d) {
+                  return  0;
+              })
+              .attr("y", function (d) {
+                  return  50;
+              })
+              .text(function (d) {
+                  return "0";
+              });
+
+
+
+  ;
+
+
+
+
+
+
+      //	svg.append("g")
+      //	.attr("class", "axis axis--x")
+        //.attr("transform", "translate(0," + (height+5) + ")")
+        //.call(xAxis)
+        //;
+
+        //svg.append("g")
+        //.attr("class", "axis axis--y")
+        //.attr("transform", "translate(0,0)");
+    }
+  }
+
+      var magintop = {top: 0, right: 0, bottom: 0, left: 0}
+      var data = [{"date":"DIFF","02":50,"03":1,"04":49}];
+      var key = ["02","03","04"];
+
+      // initStackedBarChart.draw({
+      // 	data: data,
+      // 	key: key,
+      //   margin : magintop,
+      // 	element: 'stacked-bar'
+      // });
           //d3.select("#optionsWrapper").append()
           //d3.select("inneroptions").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
 
