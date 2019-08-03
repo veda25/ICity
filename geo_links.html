@@ -1,0 +1,339 @@
+<html>
+  <head>
+    <title>deck.gl HexagonLayer Example</title>
+
+    <script src="https://unpkg.com/deck.gl@^7.0.0/dist.min.js"></script>
+    <script src="https://unpkg.com/shapefile"></script>
+    <script src="https://unpkg.com/proj4js@1.3.4/dist/proj4.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
+
+    <style type="text/css">
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+      }
+      #control-panel {
+        position: absolute;
+        background: #fff;
+        top: 0;
+        left: 0;
+        margin: 12px;
+        padding: 20px;
+        font-size: 12px;
+        line-height: 1.5;
+        z-index: 1;
+      }
+      svg {
+        padding-top: 25px;
+      }
+      label {
+        display: inline-block;
+        width: 140px;
+      }
+      .line{
+        width: inherit;
+        height: 10px;
+        border-bottom: 1px solid black;
+        position: absolute;
+      }
+      #image{
+        padding-left: 85;
+        padding-right: 85;
+        padding-top: 5px;
+        align-content: center;
+        display: inline-block;
+      }
+      #optionsWrapper {
+        border-radius: 5px;
+        background: #D3D3D3;
+        transition: width 0.3s, height 0.3s;
+        display: block;
+        position: fixed;
+        z-index: 1;
+        width: 200;
+        height: 50;
+        top: 0;
+        left: 0;
+        margin: 20px;
+        padding: 12px;
+        font-size: 11px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="optionsWrapper" style="display : none">
+
+    </div>
+
+  </body>
+
+  <script type="text/javascript">
+
+    proj4.defs("EPSG:32617", "+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
+
+    const {DeckGL, GeoJsonLayer} = deck;
+
+    let idString = "";
+    let seed = 0;
+
+    const geo = getGEO();
+
+    const deckgl = new deck.DeckGL({
+        viewState: {
+          latitude: 43.6529,
+          longitude: -79.3849,
+          zoom: 12,
+          pitch: 0,
+          minZoom: 8,
+          maxZoom: 15
+        },
+        mapboxApiAccessToken: 'pk.eyJ1Ijoibm90Ymxvb20iLCJhIjoiY2pyaWVua3gzMDA4ODN5bXl0ZTU1ejgyOCJ9.e6_za1_NqG7xddmPCXxBAQ',
+        mapStyle: 'mapbox://styles/mapbox/dark-v9',
+        pickingRadius: 5,
+        layers: []
+      });
+
+    function redraw_Layers() {
+      const layers = [getGEO()];
+      deckgl.setProps({ layers });
+    }
+    function getGEO(data){
+      return new GeoJsonLayer({
+                id: 'geojson2',
+                data: '/geojson/tlines.geojson',
+                opacity: 1,
+                stroked: false,
+                filled: false,
+                lineWidthMinPixels: 1,
+                parameters: {
+                  depthTest: false
+                },
+
+                getLineColor: getLineColor,
+                getLineWidth: getLineWidth,
+
+                pickable: true,
+                onHover: updateTooltip,
+                onClick: clickTooltip,
+
+                updateTriggers: {
+                  getLineColor: {idString, seed},
+                  getLineWidth: {idString, seed}
+                },
+
+                transitions: {
+                  getLineColor: 200,
+                  getLineWidth: 200
+                }
+              });
+      }
+
+
+  function clickTooltip(info) {
+
+    const element = document.querySelector('#optionsWrapper')
+    const disp = element.style.height;
+    let newdisp = "200px";
+    if(disp == newdisp){
+      newdisp = "50px";
+    }
+    if(info.object == null) return;
+
+    seed = Math.random();
+    idString = info.object.properties.ID;
+    d3.select("#optionsWrapper").style('height', newdisp);
+    d3.select("#optionsWrapper").style('width', 200);
+    if(newdisp=="50px"){
+      d3.selectAll('#image').style("display","");
+
+      d3.selectAll('svg').remove();
+      return;
+    }
+    //d3.select("#optionsWrapper").html("")
+    d3.selectAll('#image').style("display","none");
+    var svg = d3.select("#optionsWrapper").append("svg"),
+    width = 200 ,
+    height = 200,
+    g = svg.append("g");
+
+    var parseTime = d3.timeParse("%d-%b-%y");
+
+    var x = d3.scaleBand()
+      .rangeRound([0, width])
+      .padding(0.1);
+
+    var y = d3.scaleLinear()
+      .rangeRound([height, 0]);
+
+    d3.tsv("morley2.tsv").then(function (data) {
+      x.domain(data.map(function (d) {
+          return d.Run;
+        }));
+      y.domain([0, d3.max(data, function (d) {
+            return Number(d.Speed);
+          })]);
+
+      g.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+
+      g.append("g")
+      .call(d3.axisLeft(y))
+      .append("text")
+      .attr("fill", "#000")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+
+      g.selectAll(".bar")
+      .data(data)
+      .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function (d) {
+        return x(d.Run);
+      })
+      .attr("y", function (d) {
+        return y(Number(d.Speed));
+      })
+      .attr("width", x.bandwidth())
+      .attr("height", function (d) {
+        return height - y(Number(d.Speed));
+      });
+    });
+
+  }
+
+  function updateTooltip(info) {
+    if(!info.picked){
+      const tooltip = d3.select('#optionsWrapper');
+      tooltip.style('display', 'none');
+      idString = '';
+      redraw_Layers();
+
+      return;
+    }
+
+    const props = info.object ? info.object.properties : null;
+
+    if(props.ID == idString){
+      d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y)
+      return;
+    }
+    d3.select("#optionsWrapper").style('height', 50);//.style('display', '');
+    d3.select("#optionsWrapper").style('width', 200);
+    if(info.object == null) return;
+    seed = Math.random();
+    idString = info.object.properties.ID;
+
+
+    const tooltip = d3.select('#optionsWrapper');
+
+        let content = '';
+
+        if (props) {
+
+
+          const v = props.ID;
+          const r = props.LANES;
+          const s = props.DESC;
+
+          let content = `<big>${props.DESC} is </big>`;
+
+            content += `
+      <div>
+       <b>97% Complete</b>
+      </div>
+      <div class=line></div>
+      <img id = image
+    src="./media/Arrow-down.svg"
+    alt="triangle with all three sides equal"
+    height="30px"
+    width="30px" />
+      `
+      ;
+
+
+          d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
+          //d3.select("#optionsWrapper").append()
+          //d3.select("inneroptions").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
+
+
+          //tooltip.html(content);
+        } else {
+          d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y)
+          //tooltip.style('display', 'none');
+        }
+
+
+    redraw_Layers();
+  }
+
+  function getLineColor(f) {
+    if(f.properties.ID == idString){
+      return [100, 250, 200];
+    } else{
+      return [200, 20, 200];
+    }
+   }
+
+   function getLineWidth(f) {
+     if(f.properties.ID == idString){
+       return 60;
+     } else{
+       return 1;
+     }
+   }
+
+
+
+
+    d3.json('/geojson/tlines.geojson')
+       .then(accidents => {
+       redraw_Layers();
+     });
+
+    // function getGeo() {
+    //     return new GeoJsonLayer({
+    //           id: 'geojson',
+    //           data: 'https://webspace.ocad.ca/~3158873/cs/geojson/tlines.geojson',
+    //           opacity: 1,
+    //           stroked: false,
+    //           filled: false,
+    //           lineWidthMinPixels: 1,
+    //           parameters: {
+    //             depthTest: false
+    //           },
+    //
+    //           getLineColor: getLineColor,
+    //           getLineWidth: getLineWidth,
+    //
+    //           pickable: true,
+    //           onHover: updateTooltip,
+    //           onClick: updateTooltip,
+    //           updateTriggers: {
+    //             getLineColor: {idString, seed},
+    //             getLineWidth: {idString, seed}
+    //           },
+    //
+    //           transitions: {
+    //             getLineColor: 200,
+    //             getLineWidth: 200
+    //           }
+    //         });
+    //   }
+
+    // let geojsonLayer = getGeo();
+
+
+
+
+
+  </script>
+</html>

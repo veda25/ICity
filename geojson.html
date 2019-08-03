@@ -1,0 +1,226 @@
+<html>
+  <head>
+    <title>deck.gl HexagonLayer Example</title>
+
+    <script src="https://unpkg.com/deck.gl@^7.0.0/dist.min.js"></script>
+    <script src="https://unpkg.com/shapefile"></script>
+    <script src="https://unpkg.com/proj4js@1.3.4/dist/proj4.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
+
+    <style type="text/css">
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+      }
+
+      #control-panel {
+        position: absolute;
+        background: #fff;
+        top: 0;
+        left: 0;
+        margin: 12px;
+        padding: 20px;
+        font-size: 12px;
+        line-height: 1.5;
+        z-index: 1;
+      }
+
+      label {
+        display: inline-block;
+        width: 140px;
+      }
+      #options {
+        position: fixed;
+        z-index: 1;
+        background: #fff;
+        top: 0;
+        left: 0;
+        margin: 20px;
+        padding: 12px;
+        font-size: 11px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="options"></div>
+  </body>
+
+  <script type="text/javascript">
+
+    proj4.defs("EPSG:32617", "+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
+
+    const {DeckGL, GeoJsonLayer} = deck;
+
+    let idString = "T047Aa";
+    let seed = 0;
+
+    const geo = getGEO();
+
+    const deckgl = new deck.DeckGL({
+        viewState: {
+          latitude: 43.6529,
+          longitude: -79.3849,
+          zoom: 12,
+          pitch: 0,
+          minZoom: 8,
+          maxZoom: 15
+        },
+        mapboxApiAccessToken: 'pk.eyJ1Ijoibm90Ymxvb20iLCJhIjoiY2pyaWVua3gzMDA4ODN5bXl0ZTU1ejgyOCJ9.e6_za1_NqG7xddmPCXxBAQ',
+        mapStyle: 'mapbox://styles/mapbox/dark-v9',
+        pickingRadius: 5,
+        layers: []
+      });
+
+    function redraw_Layers() {
+      const layers = [getGEO()];
+      deckgl.setProps({ layers });
+    }
+    function getGEO(data){
+      return new GeoJsonLayer({
+                id: 'geojson2',
+                data: 'https://webspace.ocad.ca/~3158873/cs/geojson/tlines.geojson',
+                opacity: 1,
+                stroked: false,
+                filled: false,
+                lineWidthMinPixels: 1,
+                parameters: {
+                  depthTest: false
+                },
+
+                getLineColor: getLineColor,
+                getLineWidth: getLineWidth,
+
+                pickable: true,
+                onHover: updateTooltip,
+                onClick: updateTooltip,
+
+                updateTriggers: {
+                  getLineColor: {idString, seed},
+                  getLineWidth: {idString, seed}
+                },
+
+                transitions: {
+                  getLineColor: 200,
+                  getLineWidth: 200
+                }
+              });
+      }
+
+
+
+
+  function updateTooltip(info) {
+    if(info.object == null) return;
+    seed = Math.random();
+    idString = info.object.properties.ID;
+
+    console.log(idString);
+
+    const tooltip = d3.select('#options');
+    const props = info.object ? info.object.properties : null;
+        let content = '';
+
+        if (props) {
+          const v = props.VEHICLE;
+          const r = props.HEADWAY;
+          const s = props.SPEED;
+
+          let content = `<big>${props.DESC} (${props.ID})</big>`;
+
+            content += `
+      <div>
+        <b>${v}</b> vehicle id
+        <b>${r}</b> headway
+        <b>${s}</b> speed
+      </div>`;
+
+          //tooltip.style('display', 'block').style('left', info.x).style('top', info.y).html(content);
+          tooltip.html(content);
+        } else {
+          //tooltip.style('display', 'none');
+        }
+
+
+    redraw_Layers();
+  }
+
+  function getLineColor(f) {
+    if(f.properties.ID == idString){
+      return [100, 250, 200];
+    } else{
+      return [200, 20, 200];
+    }
+   }
+
+   function getLineWidth(f) {
+     if(f.properties.ID == idString){
+       return 60;
+     } else{
+       return 1;
+     }
+   }
+
+
+
+   function initInputs(container) {
+      const inputValue = container.append('div').text(`ID: ${idString}`);
+      const input = container.append('input').attr('type', 'text')
+        .attr('value', idString)
+        .on('input', () => {
+          idString = input.property('value');
+          inputValue.text(`ID: ${idString}`);
+          redraw_Layers();
+        });
+    }
+
+
+    d3.json('https://webspace.ocad.ca/~3158873/cs/geojson/tlines.geojson')
+       .then(accidents => {
+       initInputs(d3.select('#options'));
+       redraw_Layers();
+     });
+
+    // function getGeo() {
+    //     return new GeoJsonLayer({
+    //           id: 'geojson',
+    //           data: 'https://webspace.ocad.ca/~3158873/cs/geojson/tlines.geojson',
+    //           opacity: 1,
+    //           stroked: false,
+    //           filled: false,
+    //           lineWidthMinPixels: 1,
+    //           parameters: {
+    //             depthTest: false
+    //           },
+    //
+    //           getLineColor: getLineColor,
+    //           getLineWidth: getLineWidth,
+    //
+    //           pickable: true,
+    //           onHover: updateTooltip,
+    //           onClick: updateTooltip,
+    //           updateTriggers: {
+    //             getLineColor: {idString, seed},
+    //             getLineWidth: {idString, seed}
+    //           },
+    //
+    //           transitions: {
+    //             getLineColor: 200,
+    //             getLineWidth: 200
+    //           }
+    //         });
+    //   }
+
+    // let geojsonLayer = getGeo();
+
+
+
+
+
+  </script>
+</html>
