@@ -28,7 +28,6 @@
         z-index: 1;
       }
       svg {
-        padding-top: 25px;
       }
       label {
         display: inline-block;
@@ -54,7 +53,7 @@
         display: block;
         position: fixed;
         z-index: 1;
-        width: 200;
+        width: 440;
         height: 50;
         top: 0;
         left: 0;
@@ -139,7 +138,7 @@
 
     const element = document.querySelector('#optionsWrapper')
     const disp = element.style.height;
-    let newdisp = "200px";
+    let newdisp = "440px";
     if(disp == newdisp){
       newdisp = "50px";
     }
@@ -148,65 +147,189 @@
     seed = Math.random();
     idString = info.object.properties.ID;
     d3.select("#optionsWrapper").style('height', newdisp);
-    d3.select("#optionsWrapper").style('width', 200);
+    d3.select("#optionsWrapper").style('width', 440);
     if(newdisp=="50px"){
       d3.selectAll('#image').style("display","");
 
       d3.selectAll('svg').remove();
       return;
     }
+
     //d3.select("#optionsWrapper").html("")
     d3.selectAll('#image').style("display","none");
-    var svg = d3.select("#optionsWrapper").append("svg"),
-    width = 200 ,
-    height = 200,
-    g = svg.append("g");
 
-    var parseTime = d3.timeParse("%d-%b-%y");
 
-    var x = d3.scaleBand()
-      .rangeRound([0, width])
-      .padding(0.1);
 
-    var y = d3.scaleLinear()
-      .rangeRound([height, 0]);
 
-    d3.tsv("morley2.tsv").then(function (data) {
-      x.domain(data.map(function (d) {
-          return d.Run;
-        }));
-      y.domain([0, d3.max(data, function (d) {
-            return Number(d.Speed);
-          })]);
 
-      g.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x))
+    var initStackedBarChart = {
+	draw: function(config) {
+		me = this,
+		domEle = config.element,
+		stackKey = config.key,
+		data = config.data,
+		margin = config.margin,
+		width = 200 ,
+		height = 30 ,
+		xScale = d3.scaleLinear().rangeRound([0, width]),
+		yScale = d3.scaleBand().rangeRound([height, 0]).padding(0.1),
+    color = d3.scaleOrdinal()
+          .range(["red", "green", "blue", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+  	xAxis = d3.axisBottom(xScale),
+		yAxis =  d3.axisLeft(yScale),
+		svg = d3.select("#optionsWrapper").append("svg")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      g.append("g")
-      .call(d3.axisLeft(y))
-      .append("text")
-      .attr("fill", "#000")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", "0.71em")
-      .attr("text-anchor", "end")
+		var stack = d3.stack()
+			.keys(stackKey)
+			/*.order(d3.stackOrder)*/
+			.offset(d3.stackOffsetNone);
 
-      g.selectAll(".bar")
-      .data(data)
-      .enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", function (d) {
-        return x(d.Run);
-      })
-      .attr("y", function (d) {
-        return y(Number(d.Speed));
-      })
-      .attr("width", x.bandwidth())
-      .attr("height", function (d) {
-        return height - y(Number(d.Speed));
-      });
-    });
+		var layers= stack(data);
+			yScale.domain(data.map(function(d) { return d.date; }));
+			xScale.domain([0, 100 ]).nice();
+
+		var layer = svg.selectAll(".layer")
+			.data(layers)
+			.enter().append("g")
+			.attr("class", "layer")
+			.style("fill", function(d, i) { return color(i); });
+
+		  layer.selectAll("rect")
+			  .data(function(d) { return d; })
+			.enter().append("rect")
+			  .attr("y", function(d) { return yScale(d.data.date); })
+			  .attr("x", function(d) { return xScale(d[0]); })
+			  .attr("height", 30)
+			  .attr("width", function(d) { return xScale(d[1]) - xScale(d[0]) });
+
+           layer.append("text")
+            .attr("class", "label")
+            //y position of the label is halfway down the bar
+            //x position is 3 pixels to the right of the bar
+            .attr("x", function (d) {
+                return  0;
+            })
+            .attr("y", function (d) {
+                return  50;
+            })
+            .text(function (d) {
+                return "0";
+            });
+
+
+                       layer.append("text")
+                        .attr("class", "label")
+                        //y position of the label is halfway down the bar
+                        //x position is 3 pixels to the right of the bar
+                        .attr("x", function (d) {
+                            return  182;
+                        })
+                        .attr("y", function (d) {
+                            return  50;
+                        })
+
+                        .text(function (d) {
+                            return "100";
+                        });
+
+                        layer.append("text")
+                         .attr("class", "label")
+                         //y position of the label is halfway down the bar
+                         //x position is 3 pixels to the right of the bar
+                         .attr("x", function (d) {
+                             return  0;
+                         })
+                         .attr("y", function (d) {
+                             return  -35;
+                         })
+
+                         .text(function (d) {
+                             return "asd";
+                         });
+
+                         layer.append("text")
+                          .attr("class", "label")
+                          //y position of the label is halfway down the bar
+                          //x position is 3 pixels to the right of the bar
+                          .attr("x", function (d) {
+                              return  0;
+                          })
+                          .attr("y", function (d) {
+                              return  -5;
+                          })
+                          .attr("font-size","34px")
+
+                          .text(function (d) {
+                              return "55%";
+                          });
+
+
+
+
+		//	svg.append("g")
+		//	.attr("class", "axis axis--x")
+			//.attr("transform", "translate(0," + (height+5) + ")")
+			//.call(xAxis)
+      //;
+
+			//svg.append("g")
+			//.attr("class", "axis axis--y")
+			//.attr("transform", "translate(0,0)");
+	}
+}
+var magintop = {top: 75, right: 10, bottom: 25, left: 10}
+var margin = {top: 15, right: 10, bottom: 25, left: 10}
+var data = [{"date":"DIFF","02":50,"03":1,"04":49}];
+
+//var data = [{"date":"TEXT","TEXT01":59,"TEXT03":33,"TEXT04":23},{"date":"DIFF","DIFF02":88,"DIFF03":1,"DIFF04":30},{"date":"ETCH","ETCH02":78,"ETCH03":81,"ETCH04":70},{"date":"ANNL","ANNL01":53,"ANNL03":12,"ANNL05":18},{"date":"FCOT","FCOT01":84,"FCOT02":27,"FCOT05":16},{"date":"PRNT","PRNT01A":72,"PRNT01A":14,"PRNT04B":42}];
+//var key = ["TEXT01","TEXT02", "TEXT03", "TEXT04","DIFF01","DIFF02", "DIFF03", "DIFF04","DIFF05","ETCH01","ETCH02", "ETCH03", "ETCH04", "ETCH05","ANNL01","ANNL02", "ANNL03", "ANNL04", "ANNL05","FCOT01","FCOT02", "FCOT03", "FCOT04", "FCOT05", "PRNT01A", "PRNT01B", "PRNT02A", "PRNT02B", "PRNT01A", "PRNT03B", "PRNT04A", "PRNT04B"];
+
+var key = ["02","03","04"];
+
+initStackedBarChart.draw({
+	data: data,
+	key: key,
+  margin : magintop,
+	element: 'stacked-bar'
+});
+initStackedBarChart.draw({
+	data: data,
+	key: key,
+  margin : margin,
+	element: 'stacked-bar'
+});
+initStackedBarChart.draw({
+	data: data,
+	key: key,
+  margin : margin,
+
+	element: 'stacked-bar'
+});
+initStackedBarChart.draw({
+	data: data,
+	key: key,
+  margin : margin,
+
+	element: 'stacked-bar'
+});
+initStackedBarChart.draw({
+	data: data,
+  margin : margin,
+
+	key: key,
+	element: 'stacked-bar'
+});
+initStackedBarChart.draw({
+	data: data,
+  margin : margin,
+
+	key: key,
+	element: 'stacked-bar'
+});
 
   }
 
@@ -227,7 +350,7 @@
       return;
     }
     d3.select("#optionsWrapper").style('height', 50);//.style('display', '');
-    d3.select("#optionsWrapper").style('width', 200);
+    d3.select("#optionsWrapper").style('width', 440);
     if(info.object == null) return;
     seed = Math.random();
     idString = info.object.properties.ID;
