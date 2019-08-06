@@ -28,23 +28,36 @@
         z-index: 1;
       }
       svg {
+        display: inline-block;
+
       }
       label {
         display: inline-block;
         width: 140px;
       }
       .line{
+        padding-top: 15px;
         width: inherit;
         height: 10px;
         border-bottom: 1px solid black;
         position: absolute;
       }
       #image{
-        padding-left: 85;
-        padding-right: 85;
-        padding-top: 5px;
+        padding-top: 20px;
+        padding-left: 210;
         align-content: center;
         display: inline-block;
+      }
+      #text{
+        display:inline-block;
+        padding-top: 10px;
+        width: 200;
+      }
+      #chart{
+        float: right;
+        height: 10px;
+        display: inline-block;
+        width: 200;
       }
       #optionsWrapper {
         border-radius: 5px;
@@ -54,7 +67,7 @@
         position: fixed;
         z-index: 1;
         width: 440;
-        height: 50;
+        height: 70;
         top: 0;
         left: 0;
         margin: 20px;
@@ -77,7 +90,13 @@
     proj4.defs("EPSG:32617", "+proj=utm +zone=17 +ellps=WGS84 +datum=WGS84 +units=m +no_defs");
 
     const {DeckGL, GeoJsonLayer} = deck;
-
+    const paths =  			{
+			fill: "#000000",
+			stroke: "#626161",
+			strokewidth: "0.25",
+			strokemiterlimit: "10",
+		 	d: "M0,-5L10,0L0,5"
+		};
     let idString = "";
     let seed = 0;
 
@@ -138,9 +157,9 @@
 
     const element = document.querySelector('#optionsWrapper')
     const disp = element.style.height;
-    let newdisp = "440px";
+    let newdisp = "500px";
     if(disp == newdisp){
-      newdisp = "50px";
+      newdisp = "70px";
     }
     if(info.object == null) return;
 
@@ -148,7 +167,7 @@
     idString = info.object.properties.ID;
     d3.select("#optionsWrapper").style('height', newdisp);
     d3.select("#optionsWrapper").style('width', 440);
-    if(newdisp=="50px"){
+    if(newdisp=="70px"){
       d3.selectAll('#image').style("display","");
 
       d3.selectAll('svg').remove();
@@ -159,13 +178,7 @@
     d3.selectAll('#image').style("display","none");
 
 
-    var paths =  			{
-			fill: "#000000",
-			stroke: "#626161",
-			strokewidth: "0.25",
-			strokemiterlimit: "10",
-		 	d: "M0,-5L10,0L0,5"
-		};
+
 
 
     var initStackedBarChart = {
@@ -176,14 +189,14 @@
 		data = config.data,
 		margin = config.margin,
 		width = 200 ,
-		height = 30 ,
+		height = 35 ,
 		xScale = d3.scaleLinear().rangeRound([0, width]),
 		yScale = d3.scaleBand().rangeRound([height, 0]).padding(0.1),
     color = d3.scaleOrdinal()
           .range(["red", "green", "blue", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
   	xAxis = d3.axisBottom(xScale),
 		yAxis =  d3.axisLeft(yScale),
-		svg = d3.select("#optionsWrapper").append("svg")
+		svg = d3.select("#chartWrapper").append("svg")
 				.attr("width", width + margin.left + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
 				.append("g")
@@ -315,8 +328,8 @@ layer.append("text")
 			//.attr("transform", "translate(0,0)");
 	}
 }
-var magintop = {top: 75, right: 10, bottom: 25, left: 10}
-var margin = {top: 15, right: 10, bottom: 25, left: 10}
+var magintop = {top: 95, right: 10, bottom: 20, left: 10}
+var margin = {top: 0, right: 10, bottom: 0, left: 10}
 var data = [{"date":"DIFF","02":50,"03":1,"04":49}];
 
 //var data = [{"date":"TEXT","TEXT01":59,"TEXT03":33,"TEXT04":23},{"date":"DIFF","DIFF02":88,"DIFF03":1,"DIFF04":30},{"date":"ETCH","ETCH02":78,"ETCH03":81,"ETCH04":70},{"date":"ANNL","ANNL01":53,"ANNL03":12,"ANNL05":18},{"date":"FCOT","FCOT01":84,"FCOT02":27,"FCOT05":16},{"date":"PRNT","PRNT01A":72,"PRNT01A":14,"PRNT04B":42}];
@@ -383,7 +396,7 @@ initStackedBarChart.draw({
       d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y)
       return;
     }
-    d3.select("#optionsWrapper").style('height', 50);//.style('display', '');
+    d3.select("#optionsWrapper").style('height', 70);//.style('display', '');
     d3.select("#optionsWrapper").style('width', 440);
     if(info.object == null) return;
     seed = Math.random();
@@ -401,11 +414,17 @@ initStackedBarChart.draw({
           const r = props.LANES;
           const s = props.DESC;
 
-          let content = `<big>${props.DESC} is </big>`;
+          let content = ``;
 
             content += `
+
+            <div id=text>
+            <big>${props.DESC} is </big>
       <div>
        <b>97% Complete</b>
+      </div>
+      </div>
+      <div id=chart>
       </div>
       <div class=line></div>
       <img id = image
@@ -413,10 +432,11 @@ initStackedBarChart.draw({
     alt="triangle with all three sides equal"
     height="30px"
     width="30px" />
+    <div id=chartWrapper></div>
       `
       ;
 
-    d3.select("#optionsWrapper").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
+    d3.select("#optionsWrapper").style('left', info.x).style('display', 'block').style('top', info.y).html(content);
 
       var initStackedBarChart = {
     draw: function(config) {
@@ -425,7 +445,7 @@ initStackedBarChart.draw({
       stackKey = config.key,
       data = config.data,
       margin = config.margin,
-      width = 70 ,
+      width = 200 ,
       height = 50 ,
       xScale = d3.scaleLinear().rangeRound([0, width]),
       yScale = d3.scaleBand().rangeRound([height, 0]).padding(0.1),
@@ -433,11 +453,11 @@ initStackedBarChart.draw({
             .range(["red", "green", "blue", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
       xAxis = d3.axisBottom(xScale),
       yAxis =  d3.axisLeft(yScale),
-      svg = d3.select("#optionsWrapper").append("svg")
+      svg = d3.select("#chart").append("svg")
           .attr("width", width + margin.left + margin.right)
           .attr("height", height + margin.top + margin.bottom)
           .append("g")
-          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          .attr("transform", "translate(" + margin.left + 30 + "," + margin.top + ")");
       var stack = d3.stack()
         .keys(stackKey)
         /*.order(d3.stackOrder)*/
@@ -477,7 +497,38 @@ initStackedBarChart.draw({
 
 
 
-  ;
+  layer.append("text")
+   .attr("class", "label")
+   //y position of the label is halfway down the bar
+   //x position is 3 pixels to the right of the bar
+   .attr("x", function (d) {
+       return  150;
+   })
+   .attr("y", function (d) {
+       return  50;
+   })
+
+   .text(function (d) {
+       return "50";
+   });
+
+
+                 layer.append('path')
+
+               		.attr("class", ".arrow")
+                   .attr("orient", "auto")
+                   .attr('transform', 'translate(' + 135 +','+ 45+') rotate(270 0 0) ')
+
+                   .attr("d",   paths.d)
+                     	.style("stroke", function(d) { return 'black' })
+                     	.style("stroke-width", function(d) { return paths.strokewidth; })
+                     	.style("stroke-miterlimit", function(d) { return paths.strokemiterlimit; })
+                     	.style("fill", function(d) { return paths.fill; });
+
+
+
+
+
 
 
 
@@ -500,12 +551,12 @@ initStackedBarChart.draw({
       var data = [{"date":"DIFF","02":50,"03":1,"04":49}];
       var key = ["02","03","04"];
 
-      // initStackedBarChart.draw({
-      // 	data: data,
-      // 	key: key,
-      //   margin : magintop,
-      // 	element: 'stacked-bar'
-      // });
+      initStackedBarChart.draw({
+      	data: data,
+      	key: key,
+        margin : magintop,
+      	element: 'stacked-bar'
+      });
           //d3.select("#optionsWrapper").append()
           //d3.select("inneroptions").style('display', 'block').style('left', info.x).style('top', info.y).html(content);
 
