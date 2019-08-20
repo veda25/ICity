@@ -257,7 +257,7 @@
     console.log("aha");
     const element = document.querySelector('#optionsWrapper')
     const disp = document.getElementById("sidebar-contact").style.left;
-    let rest = '<a href="#home" class="active">Home</a><a href="#news">News</a><a href="#contact">Contact</a><a href="#about">About</a><a href="javascript:void(0);" class="icon" onclick="myFunction()"><i class="fa fa-bars"></i></a>'
+    let rest = '<div class="sidebar-contact" id="sidebar-contact"><div id="top"></div><div id="content"></div></div><div class="topnav" id="myTopnav"><a href="#home" id="name" ></a><a id="right" href="#contact">Search</a><a id="right" href="#about">Filter</a>'
     const nav = document.getElementById("myTopnav");
     nav.innerHTML = (button);
 
@@ -272,7 +272,7 @@
     seed = Math.random();
     idString = info.object.properties.ID;
     //d3.select("#optionsWrapper").style('height', newdisp);
-    d3.select("#optionsWrapper").style('width', 440);
+    //d3.select("#optionsWrapper").style('width', 440);
     if(newdisp=="-50%"){
       nav.innerHTML = (rest);
       d3.selectAll('svg').remove();
@@ -280,7 +280,7 @@
     }
 
     //d3.select("#optionsWrapper").html("")
-    d3.selectAll('#image').style("display","none");
+    //d3.selectAll('#image').style("display","none");
 
 
 
