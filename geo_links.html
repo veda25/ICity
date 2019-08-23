@@ -47,6 +47,12 @@
 .topnav .icon {
   display: none;
 }
+svg{
+
+}
+.chartholder{
+  border-style: solid;
+}
       body {
         font-family: Helvetica, Arial, sans-serif;
         width: 100vw;
@@ -123,10 +129,17 @@
       }
       #top{
         width: inherit;
-        height: 200px;
+        height: 100px;
+        font-size: 1.5em;
+
+        padding-top: 100px;
       }
 
       #right{
+        float: right;
+      }
+      #righttop{
+        padding-right: 100px;
         float: right;
       }
       #optionsWrapper {
@@ -165,7 +178,7 @@
   </head>
 
   <body>
-    <div class="sidebar-contact" id="sidebar-contact"><div id="top"></div><div id="content"></div></div>
+    <div class="sidebar-contact" id="sidebar-contact"><div id="top">Harbord Street <div id="righttop">95%</div><div id=right></div></div><div id="content">  <div id="place1" class="chartholder"></div> <div id="place2" class="chartholder"></div> <div id="place3" class="chartholder"></div>  <div id="place4" class="chartholder"></div>   <div id="place5" class="chartholder"></div>  <div id="place6" class="chartholder"></div>        </div></div>
     <div class="topnav" id="myTopnav">
   <a href="#home" id="name" >Home</a>
   <a id="right" href="#contact">Search</a>
@@ -301,7 +314,7 @@
           .range(["red", "green", "blue", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
   	xAxis = d3.axisBottom(xScale),
 		yAxis =  d3.axisLeft(yScale),
-		svg = d3.select("#content").append("svg")
+		svg = d3.select("#"+config.insert).append("svg")
 				.attr("width", width + margin.left + margin.right)
 				.attr("height", height + margin.top + margin.bottom)
 				.append("g")
@@ -445,18 +458,23 @@ var key = ["02","03","04"];
 initStackedBarChart.draw({
 	data: data,
 	key: key,
+  insert: "place1",
   margin : magintop,
 	element: 'stacked-bar'
 });
 initStackedBarChart.draw({
 	data: data,
 	key: key,
+  insert: "place2",
+
   margin : margin,
 	element: 'stacked-bar'
 });
 initStackedBarChart.draw({
 	data: data,
 	key: key,
+  insert: "place3",
+
   margin : margin,
 
 	element: 'stacked-bar'
@@ -464,6 +482,8 @@ initStackedBarChart.draw({
 initStackedBarChart.draw({
 	data: data,
 	key: key,
+  insert: "place4",
+
   margin : margin,
 
 	element: 'stacked-bar'
@@ -471,6 +491,7 @@ initStackedBarChart.draw({
 initStackedBarChart.draw({
 	data: data,
   margin : margin,
+  insert: "place5",
 
 	key: key,
 	element: 'stacked-bar'
@@ -478,6 +499,7 @@ initStackedBarChart.draw({
 initStackedBarChart.draw({
 	data: data,
   margin : margin,
+  insert: "place6",
 
 	key: key,
 	element: 'stacked-bar'
